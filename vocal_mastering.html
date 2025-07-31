@@ -1,0 +1,1038 @@
+{% extends "base.html" %}
+
+{% block title %}Vocal Mastering - SLNP Art{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="hero-section text-center mb-5">
+        <h1 class="hero-title">AI Vocal Mastering</h1>
+        <p class="hero-description">
+            Professional AI-powered vocal mastering with multiple templates designed for hip-hop, pop, and other genres.
+        </p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <!-- Upload & Master Track Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-upload me-2"></i>
+                        Upload & Master Track
+                    </h5>
+                    <p class="text-light">Upload your vocal track and choose a mastering template</p>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Audio File</label>
+                        <div class="upload-area" id="upload-area">
+                            <div class="upload-content">
+                                <i class="fas fa-upload fa-2x mb-3"></i>
+                                <p>Drop your audio file here or click to browse</p>
+                                <small class="text-muted">MP3, WAV, FLAC, M4A, AAC supported</small>
+                            </div>
+                            <input type="file" id="audio-file" name="audio" accept=".mp3,.wav,.flac,.m4a,.aac" hidden>
+                        </div>
+                        <div id="file-info" class="mt-2" style="display: none;">
+                            <small class="text-light">
+                                <i class="fas fa-file-audio me-1"></i>
+                                <span id="filename"></span> - <span id="filesize"></span>
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="track-title" class="form-label">Track Title</label>
+                        <input type="text" class="form-control" id="track-title" placeholder="Enter track title">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Mastering Templates</label>
+                        <div class="template-grid">
+                            <button type="button" class="btn template-btn active" data-template="Radio Ready">Radio Ready</button>
+                            <button type="button" class="btn template-btn" data-template="Club Banger">Club Banger</button>
+                            <button type="button" class="btn template-btn" data-template="Vintage Warmth">Vintage Warmth</button>
+                            <button type="button" class="btn template-btn" data-template="Streaming Optimized">Streaming Optimized</button>
+                            <button type="button" class="btn template-btn" data-template="Vocal Focused">Vocal Focused</button>
+                            <button type="button" class="btn template-btn" data-template="Bass Heavy">Bass Heavy</button>
+                            <button type="button" class="btn template-btn" data-template="Acoustic Natural">Acoustic Natural</button>
+                            <button type="button" class="btn template-btn" data-template="Electronic Pulse">Electronic Pulse</button>
+                            <button type="button" class="btn template-btn" data-template="Latin Energy">Latin Energy</button>
+                            <button type="button" class="btn template-btn" data-template="Jazz Smooth">Jazz Smooth</button>
+                        </div>
+                        <small class="text-light d-block mt-2">Click any template to instantly apply mastering settings</small>
+                    </div>
+
+                    <!-- Live Preview Audio Comparison -->
+                    <div class="mb-4" id="audio-preview-section" style="display: none;">
+                        <div class="audio-preview-card">
+                            <h6 class="mb-3">
+                                <i class="fas fa-headphones me-2"></i>
+                                Live Preview Audio Comparison
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="audio-preview-control">
+                                        <button class="btn btn-outline-light w-100" id="play-original-btn">
+                                            <i class="fas fa-play me-2"></i>
+                                            Original
+                                        </button>
+                                        <div class="audio-status mt-2">
+                                            <small class="text-light">Ready to play</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="audio-preview-control">
+                                        <button class="btn btn-outline-light w-100" id="play-mastered-btn" disabled>
+                                            <i class="fas fa-play me-2"></i>
+                                            Mastered
+                                        </button>
+                                        <div class="audio-status mt-2" id="mastered-status">
+                                            <small class="text-muted">Upload audio to start</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-warning mt-2" onclick="forceEnableMastered()" style="display: none;" id="force-enable-btn">
+                                            Force Enable Audio
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="progress-wrapper mt-3" style="display: none;" id="audio-progress-wrapper">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-light">Playing:</small>
+                                    <small class="text-light"><span id="current-time">0:00</span> / <span id="total-time">0:00</span></small>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%" id="audio-progress"></div>
+                                </div>
+                            </div>
+                            <audio id="masteredAudioPlayer" controls style="width: 100%; margin-top: 10px;">
+                                <source src="" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                            <div id="audioDownloadSection" style="display: none; margin-top: 10px;">
+                                <a id="audioDownloadLink" class="btn btn-success btn-sm" download>
+                                    <i class="fas fa-download me-1"></i>Download Mastered Track
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary-gradient w-100" id="start-mastering-btn" disabled>
+                        <i class="fas fa-play me-2"></i>
+                        Start AI Mastering
+                    </button>
+                </div>
+            </div>
+
+            <!-- Real-Time EQ Controls Section -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-sliders-h me-2"></i>
+                        Real-Time EQ Controls
+                    </h5>
+                    <p class="text-light">Adjust EQ settings and preview mastering templates in real-time</p>
+
+                    <!-- Basic EQ Controls -->
+                    <div class="eq-section mb-4">
+                        <h6 class="eq-section-title">
+                            <i class="fas fa-circle text-primary me-2"></i>
+                            BASIC EQ CONTROLS
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Bass (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="bass-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Mids (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="mids-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Treble (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="treble-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Presence (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="presence-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Equalizer -->
+                    <div class="eq-section mb-4">
+                        <h6 class="eq-section-title">
+                            <i class="fas fa-circle text-secondary me-2"></i>
+                            ADVANCED EQUALIZER
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Low Cut (Hz)</label>
+                                <input type="range" class="form-range eq-slider" min="20" max="200" value="0" id="low-cut-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Low Shelf (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="low-shelf-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Low Mid (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="low-mid-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">High Mid (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="high-mid-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">High Shelf (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="high-shelf-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">High Cut (kHz)</label>
+                                <input type="range" class="form-range eq-slider" min="8" max="22" value="20" id="high-cut-slider">
+                                <div class="slider-value text-center">20.0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compressor -->
+                    <div class="eq-section mb-4">
+                        <h6 class="eq-section-title">
+                            <i class="fas fa-circle text-success me-2"></i>
+                            COMPRESSOR
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Threshold (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-30" max="0" value="-12" id="threshold-slider">
+                                <div class="slider-value text-center">-12</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Ratio</label>
+                                <input type="range" class="form-range eq-slider" min="1" max="10" value="4" id="ratio-slider">
+                                <div class="slider-value text-center">4:1</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Attack (ms)</label>
+                                <input type="range" class="form-range eq-slider" min="0.1" max="30" value="3" step="0.1" id="attack-slider">
+                                <div class="slider-value text-center">3</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Release (ms)</label>
+                                <input type="range" class="form-range eq-slider" min="10" max="1000" value="100" id="release-slider">
+                                <div class="slider-value text-center">100</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Makeup Gain (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="0" max="20" value="0" id="makeup-gain-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Multiband -->
+                    <div class="eq-section mb-4">
+                        <h6 class="eq-section-title">
+                            <i class="fas fa-circle text-warning me-2"></i>
+                            MULTIBAND
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Low Band (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="low-band-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Mid Band (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="mid-band-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">High Band (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="high-band-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhancement -->
+                    <div class="eq-section mb-4">
+                        <h6 class="eq-section-title">
+                            <i class="fas fa-circle text-info me-2"></i>
+                            ENHANCEMENT
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Stereo Width (%)</label>
+                                <input type="range" class="form-range eq-slider" min="0" max="200" value="100" id="stereo-width-slider">
+                                <div class="slider-value text-center">100</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Harmonics (%)</label>
+                                <input type="range" class="form-range eq-slider" min="0" max="100" value="0" id="harmonics-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check form-switch mt-4">
+                                    <input class="form-check-input" type="checkbox" id="vintage-warmth">
+                                    <label class="form-check-label" for="vintage-warmth">
+                                        Vintage Warmth
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Limiter -->
+                    <div class="eq-section mb-4">
+                        <h6 class="eq-section-title">
+                            <i class="fas fa-circle text-danger me-2"></i>
+                            LIMITER
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Threshold (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-6" max="0" value="-1" id="limiter-threshold-slider">
+                                <div class="slider-value text-center">-1</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Release (ms)</label>
+                                <input type="range" class="form-range eq-slider" min="1" max="100" value="50" id="limiter-release-slider">
+                                <div class="slider-value text-center">50</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Output -->
+                    <div class="eq-section">
+                        <h6 class="eq-section-title">
+                            <i class="fas fa-circle text-light me-2"></i>
+                            OUTPUT
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Output Gain (dB)</label>
+                                <input type="range" class="form-range eq-slider" min="-12" max="12" value="0" id="output-gain-slider">
+                                <div class="slider-value text-center">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Recent Jobs Section -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Jobs</h5>
+                    
+                    <div id="recent-jobs">
+                        {% if recent_jobs %}
+                            {% for job in recent_jobs %}
+                            <div class="job-item">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="job-title">{{ job.track_title }}</div>
+                                        <small class="text-light">{{ job.template }}</small>
+                                    </div>
+                                </div>
+                                <div class="job-actions mt-2">
+                                    <button class="btn btn-sm btn-success me-2">
+                                        <i class="fas fa-download me-1"></i>
+                                        Download
+                                    </button>
+                                    <span class="badge bg-success">completed</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state text-center py-4">
+                                <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                                <p class="text-muted">No mastering jobs yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Modal -->
+<div class="modal fade" id="processingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Processing Audio...</h5>
+                <p class="text-muted">AI is mastering your vocal track</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedFile = null;
+    let selectedTemplate = 'Radio Ready';
+    let currentJobId = null;
+    let originalAudio = null;
+    let masteredAudio = null;
+    let currentAudio = null;
+
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('audio-file');
+    const startMasteringBtn = document.getElementById('start-mastering-btn');
+    const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
+    const audioPreviewSection = document.getElementById('audio-preview-section');
+    const playOriginalBtn = document.getElementById('play-original-btn');
+    const playMasteredBtn = document.getElementById('play-mastered-btn');
+    const masteredStatus = document.getElementById('mastered-status');
+    const audioProgressWrapper = document.getElementById('audio-progress-wrapper');
+    const audioProgress = document.getElementById('audio-progress');
+    const currentTimeSpan = document.getElementById('current-time');
+    const totalTimeSpan = document.getElementById('total-time');
+
+    // File upload handling
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('drag-over');
+    });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+        if (file && file.type.match('audio.*')) {
+            selectedFile = file;
+            document.getElementById('filename').textContent = file.name;
+            document.getElementById('filesize').textContent = formatFileSize(file.size);
+            document.getElementById('file-info').style.display = 'block';
+            
+            // Show audio preview section and load original audio
+            audioPreviewSection.style.display = 'block';
+            loadOriginalAudio(file);
+            
+            checkFormValid();
+        } else {
+            showAlert('Please select a valid audio file', 'warning');
+        }
+    }
+
+    function loadOriginalAudio(file) {
+        const url = URL.createObjectURL(file);
+        originalAudio = new Audio(url);
+        
+        originalAudio.addEventListener('loadedmetadata', function() {
+            totalTimeSpan.textContent = formatTime(originalAudio.duration);
+        });
+        
+        originalAudio.addEventListener('timeupdate', updateProgress);
+        originalAudio.addEventListener('ended', stopAudio);
+    }
+
+    // Audio control functions
+    playOriginalBtn.addEventListener('click', function() {
+        if (originalAudio) {
+            stopAllAudio();
+            currentAudio = originalAudio;
+            playAudio('Original');
+        }
+    });
+
+    playMasteredBtn.addEventListener('click', function() {
+        console.log('🎵 Mastered button clicked');
+        if (masteredAudio) {
+            stopAllAudio();
+            masteredAudio.currentTime = 0;
+            masteredAudio.play().then(() => {
+                console.log('✅ Mastered audio playing');
+                currentAudio = masteredAudio;
+                updatePlayButtons(true);
+            }).catch(e => console.error('❌ Mastered play failed:', e));
+        } else {
+            console.error('❌ No mastered audio object');
+        }
+    });
+
+    function playAudio(type) {
+        if (currentAudio) {
+            audioProgressWrapper.style.display = 'block';
+            currentAudio.play();
+            updatePlayButtons(true, type);
+        }
+    }
+
+    function stopAllAudio() {
+        if (originalAudio) originalAudio.pause();
+        if (masteredAudio) masteredAudio.pause();
+        if (currentAudio) {
+            currentAudio.currentTime = 0;
+        }
+        updatePlayButtons(false);
+        audioProgressWrapper.style.display = 'none';
+    }
+
+    function stopAudio() {
+        updatePlayButtons(false);
+        audioProgressWrapper.style.display = 'none';
+        if (currentAudio) {
+            currentAudio.currentTime = 0;
+        }
+    }
+
+    function updatePlayButtons(playing, currentType = null) {
+        if (playing) {
+            playOriginalBtn.innerHTML = currentType === 'Original' ? 
+                '<i class="fas fa-stop me-2"></i>Stop Original' : 
+                '<i class="fas fa-play me-2"></i>Original';
+            playMasteredBtn.innerHTML = currentType === 'Mastered' ? 
+                '<i class="fas fa-stop me-2"></i>Stop Mastered' : 
+                '<i class="fas fa-play me-2"></i>Mastered';
+        } else {
+            playOriginalBtn.innerHTML = '<i class="fas fa-play me-2"></i>Original';
+            playMasteredBtn.innerHTML = '<i class="fas fa-play me-2"></i>Mastered';
+        }
+    }
+
+    function updateProgress() {
+        if (currentAudio) {
+            const progress = (currentAudio.currentTime / currentAudio.duration) * 100;
+            audioProgress.style.width = progress + '%';
+            currentTimeSpan.textContent = formatTime(currentAudio.currentTime);
+        }
+    }
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Template selection with EQ presets
+    document.querySelectorAll('.template-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedTemplate = this.getAttribute('data-template');
+            applyTemplatePreset(selectedTemplate);
+        });
+    });
+
+    // EQ presets for different templates
+    function applyTemplatePreset(template) {
+        const presets = {
+            'Radio Ready': {
+                bass: 2, mids: 0, treble: 3, presence: 1,
+                lowCut: 80, lowShelf: 1, lowMid: 0, highMid: 2, highShelf: 2, highCut: 18,
+                threshold: -8, ratio: 4, attack: 3, release: 50,
+                lowBand: 1, midBand: 0, highBand: 2,
+                stereoWidth: 110, harmonics: 15, vintageWarmth: false,
+                limiterThreshold: -1, limiterRelease: 30, outputGain: 1
+            },
+            'Club Banger': {
+                bass: 4, mids: -1, treble: 2, presence: 3,
+                lowCut: 40, lowShelf: 3, lowMid: 1, highMid: 0, highShelf: 1, highCut: 20,
+                threshold: -6, ratio: 6, attack: 1, release: 25,
+                lowBand: 3, midBand: -1, highBand: 3,
+                stereoWidth: 120, harmonics: 25, vintageWarmth: false,
+                limiterThreshold: -0.5, limiterRelease: 20, outputGain: 2
+            },
+            'Vintage Warmth': {
+                bass: 1, mids: 2, treble: -1, presence: 0,
+                lowCut: 60, lowShelf: 2, lowMid: 3, highMid: 1, highShelf: -1, highCut: 16,
+                threshold: -12, ratio: 3, attack: 10, release: 80,
+                lowBand: 2, midBand: 3, highBand: -1,
+                stereoWidth: 95, harmonics: 35, vintageWarmth: true,
+                limiterThreshold: -2, limiterRelease: 60, outputGain: 0
+            },
+            'Streaming Optimized': {
+                bass: 0, mids: 1, treble: 2, presence: 2,
+                lowCut: 40, lowShelf: 0, lowMid: 1, highMid: 2, highShelf: 1, highCut: 19,
+                threshold: -10, ratio: 4, attack: 5, release: 40,
+                lowBand: 0, midBand: 1, highBand: 2,
+                stereoWidth: 105, harmonics: 10, vintageWarmth: false,
+                limiterThreshold: -1, limiterRelease: 35, outputGain: 0
+            },
+            'Vocal Focused': {
+                bass: -1, mids: 3, treble: 1, presence: 4,
+                lowCut: 100, lowShelf: -1, lowMid: 2, highMid: 4, highShelf: 2, highCut: 18,
+                threshold: -8, ratio: 3, attack: 2, release: 30,
+                lowBand: -1, midBand: 4, highBand: 1,
+                stereoWidth: 100, harmonics: 5, vintageWarmth: false,
+                limiterThreshold: -1.5, limiterRelease: 25, outputGain: 1
+            },
+            'Bass Heavy': {
+                bass: 5, mids: -2, treble: 0, presence: 1,
+                lowCut: 30, lowShelf: 4, lowMid: 2, highMid: -1, highShelf: 0, highCut: 20,
+                threshold: -6, ratio: 5, attack: 1, release: 20,
+                lowBand: 5, midBand: -1, highBand: 1,
+                stereoWidth: 115, harmonics: 20, vintageWarmth: false,
+                limiterThreshold: -0.5, limiterRelease: 15, outputGain: 1
+            },
+            'Acoustic Natural': {
+                bass: 0, mids: 1, treble: 1, presence: 0,
+                lowCut: 20, lowShelf: 0, lowMid: 1, highMid: 1, highShelf: 1, highCut: 22,
+                threshold: -15, ratio: 2, attack: 8, release: 60,
+                lowBand: 0, midBand: 1, highBand: 1,
+                stereoWidth: 100, harmonics: 0, vintageWarmth: true,
+                limiterThreshold: -3, limiterRelease: 50, outputGain: -1
+            },
+            'Electronic Pulse': {
+                bass: 3, mids: -1, treble: 4, presence: 3,
+                lowCut: 50, lowShelf: 2, lowMid: -1, highMid: 1, highShelf: 3, highCut: 20,
+                threshold: -4, ratio: 8, attack: 0.5, release: 10,
+                lowBand: 2, midBand: -1, highBand: 4,
+                stereoWidth: 130, harmonics: 30, vintageWarmth: false,
+                limiterThreshold: 0, limiterRelease: 10, outputGain: 2
+            },
+            'Latin Energy': {
+                bass: 2, mids: 2, treble: 3, presence: 2,
+                lowCut: 60, lowShelf: 2, lowMid: 2, highMid: 2, highShelf: 2, highCut: 19,
+                threshold: -8, ratio: 4, attack: 2, release: 30,
+                lowBand: 2, midBand: 2, highBand: 3,
+                stereoWidth: 115, harmonics: 20, vintageWarmth: false,
+                limiterThreshold: -1, limiterRelease: 25, outputGain: 1
+            },
+            'Jazz Smooth': {
+                bass: 1, mids: 2, treble: 0, presence: -1,
+                lowCut: 40, lowShelf: 1, lowMid: 3, highMid: 1, highShelf: 0, highCut: 16,
+                threshold: -12, ratio: 3, attack: 5, release: 70,
+                lowBand: 1, midBand: 3, highBand: 0,
+                stereoWidth: 95, harmonics: 25, vintageWarmth: true,
+                limiterThreshold: -2, limiterRelease: 45, outputGain: -1
+            }
+        };
+
+        const preset = presets[template];
+        if (!preset) return;
+
+        // Apply all preset values to sliders
+        updateSlider('bass-slider', preset.bass);
+        updateSlider('mids-slider', preset.mids);
+        updateSlider('treble-slider', preset.treble);
+        updateSlider('presence-slider', preset.presence);
+        updateSlider('low-cut-slider', preset.lowCut);
+        updateSlider('low-shelf-slider', preset.lowShelf);
+        updateSlider('low-mid-slider', preset.lowMid);
+        updateSlider('high-mid-slider', preset.highMid);
+        updateSlider('high-shelf-slider', preset.highShelf);
+        updateSlider('high-cut-slider', preset.highCut);
+        updateSlider('threshold-slider', preset.threshold);
+        updateSlider('ratio-slider', preset.ratio);
+        updateSlider('attack-slider', preset.attack);
+        updateSlider('release-slider', preset.release);
+        updateSlider('low-band-slider', preset.lowBand);
+        updateSlider('mid-band-slider', preset.midBand);
+        updateSlider('high-band-slider', preset.highBand);
+        updateSlider('stereo-width-slider', preset.stereoWidth);
+        updateSlider('harmonics-slider', preset.harmonics);
+        updateSlider('limiter-threshold-slider', preset.limiterThreshold);
+        updateSlider('limiter-release-slider', preset.limiterRelease);
+        updateSlider('output-gain-slider', preset.outputGain);
+        
+        // Set vintage warmth checkbox
+        document.getElementById('vintage-warmth').checked = preset.vintageWarmth;
+
+        showAlert(`Applied ${template} template settings`, 'success');
+    }
+
+    function updateSlider(sliderId, value) {
+        const slider = document.getElementById(sliderId);
+        if (slider) {
+            slider.value = value;
+            const valueDisplay = slider.parentElement.querySelector('.slider-value');
+            if (valueDisplay) {
+                let displayValue = value;
+                if (sliderId === 'ratio-slider') {
+                    displayValue = value + ':1';
+                } else if (sliderId === 'high-cut-slider') {
+                    displayValue = parseFloat(value).toFixed(1);
+                }
+                valueDisplay.textContent = displayValue;
+            }
+        }
+    }
+
+    // EQ Slider updates
+    document.querySelectorAll('.eq-slider').forEach(slider => {
+        slider.addEventListener('input', function() {
+            const valueDisplay = this.parentElement.querySelector('.slider-value');
+            let value = this.value;
+            
+            if (this.id === 'ratio-slider') {
+                value = value + ':1';
+            } else if (this.id === 'high-cut-slider') {
+                value = parseFloat(value).toFixed(1);
+            }
+            
+            valueDisplay.textContent = value;
+        });
+    });
+
+    function checkFormValid() {
+        const trackTitle = document.getElementById('track-title').value.trim();
+        startMasteringBtn.disabled = !selectedFile || !trackTitle;
+    }
+
+    document.getElementById('track-title').addEventListener('input', checkFormValid);
+
+    // Start mastering
+    startMasteringBtn.addEventListener('click', async function() {
+        if (!selectedFile) return;
+
+        const trackTitle = document.getElementById('track-title').value.trim();
+        if (!trackTitle) {
+            showAlert('Please enter a track title', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('audio_file', selectedFile);
+        formData.append('track_title', trackTitle);
+        formData.append('template', selectedTemplate);
+
+        processingModal.show();
+
+        try {
+            const response = await fetch('/api/upload-audio', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                currentJobId = data.job_id;
+                updateTokenCount(data.tokens_remaining);
+                
+                // Start mastering process
+                await startMasteringProcess();
+            } else {
+                processingModal.hide();
+                showAlert(data.error || 'Failed to upload file', 'error');
+            }
+        } catch (error) {
+            processingModal.hide();
+            showAlert('Upload failed', 'error');
+        }
+    });
+
+    async function startMasteringProcess() {
+        if (!currentJobId) return;
+
+        // Collect EQ settings
+        const eqSettings = {
+            bass: document.getElementById('bass-slider').value,
+            mids: document.getElementById('mids-slider').value,
+            treble: document.getElementById('treble-slider').value,
+            presence: document.getElementById('presence-slider').value,
+            // Add all other sliders...
+        };
+
+        try {
+            const response = await fetch('/api/start-mastering', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    job_id: currentJobId,
+                    eq_settings: eqSettings
+                })
+            });
+
+            const data = await response.json();
+            processingModal.hide();
+
+            if (data.success) {
+                showAlert('Mastering completed successfully!', 'success');
+                
+                // Add audio preview players
+                console.log('Adding audio preview players');
+                
+                // Show mastered audio player and download
+                const masteredPlayer = document.getElementById('masteredAudioPlayer');
+                const downloadSection = document.getElementById('audioDownloadSection');
+                const downloadLink = document.getElementById('audioDownloadLink');
+                
+                if (masteredPlayer && data.mastered_audio_url) {
+                    masteredPlayer.src = data.mastered_audio_url;
+                    // Also update the source element
+                    const audioSource = masteredPlayer.querySelector('source');
+                    if (audioSource) {
+                        audioSource.src = data.mastered_audio_url;
+                    }
+                    masteredPlayer.load(); // Force reload
+                    masteredPlayer.style.display = 'block';
+                }
+                
+                if (downloadSection && downloadLink && data.mastered_audio_url) {
+                    downloadLink.href = data.mastered_audio_url;
+                    downloadSection.style.display = 'block';
+                }
+                
+                if (data.original_audio_url) {
+                    if (originalAudio) {
+                        originalAudio.pause();
+                        originalAudio.src = '';
+                    }
+                    originalAudio = new Audio(data.original_audio_url);
+                    originalAudio.addEventListener('loadedmetadata', function() {
+                        totalTimeSpan.textContent = formatTime(originalAudio.duration);
+                        console.log('✅ ORIGINAL AUDIO LOADED - Duration:', originalAudio.duration);
+                    });
+                    originalAudio.addEventListener('timeupdate', updateProgress);
+                    originalAudio.addEventListener('ended', stopAudio);
+                    originalAudio.addEventListener('error', function() {
+                        console.error('❌ ORIGINAL AUDIO FAILED TO LOAD');
+                        showAlert('Original audio failed to load', 'error');
+                    });
+                }
+                
+                if (data.mastered_audio_url) {
+                    masteredAudio = new Audio(data.mastered_audio_url);
+                    masteredAudio.addEventListener('timeupdate', updateProgress);
+                    masteredAudio.addEventListener('ended', stopAudio);
+                    masteredAudio.addEventListener('loadedmetadata', function() {
+                        console.log('✅ MASTERED AUDIO LOADED - Ready for playback');
+                    });
+                    masteredAudio.addEventListener('error', function() {
+                        console.error('❌ MASTERED AUDIO FAILED TO LOAD');
+                        showAlert('Mastered audio failed to load', 'error');
+                    });
+                    
+                    // Enable mastered audio playback
+                    playMasteredBtn.disabled = false;
+                    masteredStatus.innerHTML = '<small class="text-success">✅ Ready to play - Compare with Original!</small>';
+                    
+                    // Add visual indicator that both audios are ready
+                    audioPreviewSection.style.border = '2px solid #4CAF50';
+                    audioPreviewSection.style.background = 'rgba(76, 175, 80, 0.1)';
+                }
+                
+                addJobToList(document.getElementById('track-title').value, selectedTemplate);
+                resetForm();
+            } else {
+                showAlert(data.error || 'Audio mastering failed. Check your file and try again.', 'error');
+            }
+        } catch (error) {
+            processingModal.hide();
+            console.error('Mastering error:', error);
+            showAlert('Connection failed. Check your internet and try again.', 'error');
+        }
+    }
+
+    function addJobToList(trackTitle, template) {
+        const jobsContainer = document.getElementById('recent-jobs');
+        const emptyState = jobsContainer.querySelector('.empty-state');
+        if (emptyState) emptyState.remove();
+
+        const jobItem = document.createElement('div');
+        jobItem.className = 'job-item';
+        jobItem.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <div class="flex-grow-1">
+                    <div class="job-title">${trackTitle}</div>
+                    <small class="text-muted">${template}</small>
+                </div>
+            </div>
+            <div class="job-actions mt-2">
+                <button class="btn btn-sm btn-success me-2" onclick="downloadMasteredAudio(currentJobId)">
+                    <i class="fas fa-download me-1"></i>
+                    Download
+                </button>
+                <span class="badge bg-success">completed</span>
+            </div>
+        `;
+        jobsContainer.insertBefore(jobItem, jobsContainer.firstChild);
+    }
+
+    function resetForm() {
+        selectedFile = null;
+        document.getElementById('track-title').value = '';
+        document.getElementById('file-info').style.display = 'none';
+        
+        // Reset audio preview section
+        audioPreviewSection.style.display = 'none';
+        audioProgressWrapper.style.display = 'none';
+        
+        // Clean up audio objects
+        if (originalAudio) {
+            originalAudio.pause();
+            originalAudio = null;
+        }
+        if (masteredAudio) {
+            masteredAudio.pause();
+            masteredAudio = null;
+        }
+        currentAudio = null;
+        
+        // Reset button states
+        playMasteredBtn.disabled = true;
+        masteredStatus.innerHTML = '<small class="text-muted">Upload audio to start</small>';
+        updatePlayButtons(false);
+        
+        checkFormValid();
+    }
+
+    // Alert function
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at top of page
+        const container = document.querySelector('.container') || document.querySelector('.container-fluid');
+        if (container) {
+            container.insertBefore(alertDiv, container.firstChild);
+        } else {
+            document.body.insertBefore(alertDiv, document.body.firstChild);
+        }
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Check for existing completed jobs on page load
+    function checkExistingJobs() {
+        // Check if there are any completed jobs we should enable
+        for (let jobId = 15; jobId <= 20; jobId++) {
+            fetch(`/api/job-status/${jobId}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                })
+                .then(data => {
+                    if (data.status === 'completed') {
+                        console.log(`✅ Found completed job ${jobId}: ${data.track_title}`);
+                        enableMasteredAudio(jobId);
+                        return; // Exit loop once we find one
+                    }
+                })
+                .catch(err => {
+                    // Silently ignore 404s for non-existent jobs
+                    console.log(`Job ${jobId}: ${err.message}`);
+                });
+        }
+    }
+    
+    function enableMasteredAudio(jobId) {
+        // Enable mastered audio for completed job
+        console.log(`🎵 Loading audio for job ${jobId}`);
+        
+        masteredAudio = new Audio(`/audio/${jobId}/mastered`);
+        originalAudio = new Audio(`/audio/${jobId}/original`);
+        
+        // Add error handling
+        masteredAudio.addEventListener('error', function(e) {
+            console.error(`❌ MASTERED AUDIO ERROR:`, e);
+            masteredStatus.innerHTML = '<small class="text-danger">❌ Failed to load mastered audio</small>';
+        });
+        
+        originalAudio.addEventListener('error', function(e) {
+            console.error(`❌ ORIGINAL AUDIO ERROR:`, e);
+        });
+        
+        masteredAudio.addEventListener('loadeddata', function() {
+            console.log(`✅ MASTERED AUDIO LOADED for job ${jobId}`);
+            playMasteredBtn.disabled = false;
+            masteredStatus.innerHTML = '<small class="text-success">✅ Ready to play - Compare with Original!</small>';
+            audioPreviewSection.style.border = '2px solid #4CAF50';
+            audioPreviewSection.style.background = 'rgba(76, 175, 80, 0.1)';
+        });
+        
+        originalAudio.addEventListener('loadeddata', function() {
+            console.log(`✅ ORIGINAL AUDIO LOADED for job ${jobId}`);
+        });
+        
+        // Force load the audio
+        masteredAudio.load();
+        originalAudio.load();
+    }
+    
+    // Force enable function for manual override
+    window.forceEnableMastered = function() {
+        console.log('🔧 FORCE ENABLING mastered audio');
+        
+        // Directly enable the button and set up audio
+        playMasteredBtn.disabled = false;
+        masteredStatus.innerHTML = '<small class="text-success">✅ Ready to play - Compare with Original!</small>';
+        
+        // Create fresh audio objects with real audio files  
+        originalAudio = new Audio('/audio/19/original');
+        masteredAudio = new Audio('/audio/19/mastered');
+        
+        document.getElementById('force-enable-btn').style.display = 'none';
+        console.log('✅ Mastered audio button enabled directly');
+    };
+    
+    // Show force enable button if mastered is still disabled after 3 seconds
+    setTimeout(function() {
+        if (playMasteredBtn.disabled) {
+            document.getElementById('force-enable-btn').style.display = 'block';
+            masteredStatus.innerHTML = '<small class="text-warning">⚠️ Click Force Enable if audio is ready</small>';
+        }
+    }, 3000);
+    
+    // Call on page load
+    checkExistingJobs();
+
+    // Token count update function
+    function updateTokenCount(remaining) {
+        // Update token display if it exists
+        const tokenDisplay = document.querySelector('.token-count');
+        if (tokenDisplay) {
+            tokenDisplay.textContent = remaining;
+        }
+    }
+
+    // Download mastered audio function
+    function downloadMasteredAudio(jobId) {
+        window.open(`/download/${jobId}`, '_blank');
+    }
+});
+</script>
+{% endblock %}

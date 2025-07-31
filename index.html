@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h1 class="hero-title">Create Stunning Cover Art</h1>
+                <p class="hero-description">
+                    Create professional album covers, master your vocals, and generate music videos with AI-powered tools. 
+                    Start with 64 free tokens and explore all our creative services.
+                </p>
+                <div class="mt-4">
+                    <a href="{{ url_for('cover_art') }}" class="btn btn-primary-gradient me-3">
+                        <i class="fas fa-image me-2"></i>
+                        Start Creating
+                    </a>
+                    <a href="{{ url_for('vocal_mastering') }}" class="btn btn-outline-light me-3">
+                        <i class="fas fa-microphone me-2"></i>
+                        Master Vocals
+                    </a>
+                    <a href="{{ url_for('video_generator') }}" class="btn btn-outline-light">
+                        <i class="fas fa-video me-2"></i>
+                        Generate Video
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <h3>AI Cover Art Generation</h3>
+                <p>Create professional album covers with our advanced AI technology. Multiple styles and genres supported.</p>
+                <a href="{{ url_for('cover_art') }}" class="btn btn-sm btn-primary-gradient">Get Started</a>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <h3>Professional Vocal Mastering</h3>
+                <p>Master your vocals with professional templates and real-time EQ controls for studio-quality results.</p>
+                <a href="{{ url_for('vocal_mastering') }}" class="btn btn-sm btn-primary-gradient">Try Now</a>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h3>AI Music Video Generator</h3>
+                <p>Create visually stunning music videos using your audio and style. Upload your track, and let the AI generate cinematic visuals.</p>
+                <a href="{{ url_for('video_generator') }}" class="btn btn-sm btn-primary-gradient">Generate Video</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

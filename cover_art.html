@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+
+{% block title %}Cover Art Generator - SLNP Art{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="hero-section text-center mb-5">
+        <h1 class="hero-title">Create Stunning Cover Art</h1>
+        <p class="hero-description">
+            Create professional album covers and master your vocals with AI-powered tools. 
+            Try 2 free generations for both services, then sign up for unlimited access.
+        </p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <!-- Track Details Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-music me-2"></i>
+                        Track Details
+                    </h5>
+                    
+                    <form id="cover-art-form">
+                        <div class="mb-3">
+                            <label for="artist-name" class="form-label">Artist Name</label>
+                            <input type="text" class="form-control" id="artist-name" placeholder="Enter artist name..." required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="album-title" class="form-label">Album Title</label>
+                            <input type="text" class="form-control" id="album-title" placeholder="Enter album title..." required>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Style & Genre Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-palette me-2"></i>
+                        Style & Genre
+                    </h5>
+                    
+                    <div class="genre-buttons mb-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn genre-btn hip-hop-btn w-100" data-genre="Hip Hop">
+                                    <i class="fas fa-microphone me-2"></i>
+                                    <div>
+                                        <div class="genre-name">Hip Hop</div>
+                                        <small class="genre-desc">Urban, Bold</small>
+                                    </div>
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn genre-btn pop-btn w-100" data-genre="Pop">
+                                    <i class="fas fa-star me-2"></i>
+                                    <div>
+                                        <div class="genre-name">Pop</div>
+                                        <small class="genre-desc">Clean, Modern</small>
+                                    </div>
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn genre-btn rb-btn w-100" data-genre="R&B">
+                                    <i class="fas fa-heart me-2"></i>
+                                    <div>
+                                        <div class="genre-name">R&B</div>
+                                        <small class="genre-desc">Smooth, Emotional</small>
+                                    </div>
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn genre-btn indie-btn w-100" data-genre="Indie">
+                                    <i class="fas fa-feather me-2"></i>
+                                    <div>
+                                        <div class="genre-name">Indie</div>
+                                        <small class="genre-desc">Dreamy, Aesthetic</small>
+                                    </div>
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn genre-btn rock-btn w-100" data-genre="Rock">
+                                    <i class="fas fa-guitar me-2"></i>
+                                    <div>
+                                        <div class="genre-name">Rock</div>
+                                        <small class="genre-desc">Loud, Dramatic</small>
+                                    </div>
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn genre-btn electronic-btn w-100" data-genre="Electronic">
+                                    <i class="fas fa-robot me-2"></i>
+                                    <div>
+                                        <div class="genre-name">Electronic</div>
+                                        <small class="genre-desc">Futuristic, Bright</small>
+                                    </div>
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn genre-btn jazz-btn w-100" data-genre="Jazz">
+                                    <i class="fas fa-music me-2"></i>
+                                    <div>
+                                        <div class="genre-name">Jazz</div>
+                                        <small class="genre-desc">Vintage, Soulful</small>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="explicit-content mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="explicit-content">
+                            <label class="form-check-label" for="explicit-content">
+                                Explicit Content (adds Parental Advisory logo)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- AI Model Selection -->
+                    <div class="ai-model-section mb-4">
+                        <label for="ai-model" class="form-label">AI Image Model</label>
+                        <select class="form-select" id="ai-model" name="model">
+                            <option value="stable-diffusion">Stable Diffusion v1.5</option>
+                            <option value="dalle3" selected>DALL·E 3</option>
+                            <option value="midjourney">Midjourney Style</option>
+                            <option value="dreamshaper">OpenArt DreamShaper</option>
+                            <option value="playground">Playground AI</option>
+                        </select>
+                    </div>
+
+                    <!-- AI Prompt Generator -->
+                    <div class="ai-prompt-section">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label mb-0">AI Prompt Generator</label>
+                            <button type="button" class="btn btn-outline-warning btn-sm" id="generate-prompt-btn">
+                                <i class="fas fa-magic me-1"></i>
+                                Generate
+                            </button>
+                        </div>
+                        <textarea class="form-control" id="ai-prompt" rows="3" 
+                                placeholder="AI will generate creative prompts based on your style selection..."></textarea>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-primary-gradient w-100" id="generate-cover-btn">
+                            <i class="fas fa-magic me-2"></i>
+                            Generate Cover Art
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Live Preview Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-eye me-2"></i>
+                        Live Preview
+                    </h5>
+                    
+                    <div class="preview-container">
+                        <div class="preview-placeholder" id="preview-area">
+                            <i class="fas fa-magic"></i>
+                            <p>Generate your first cover art</p>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-actions mt-3" id="preview-actions" style="display: none;">
+                        <button class="btn btn-outline-light btn-sm w-100">
+                            <i class="fas fa-download me-1"></i>
+                            Download Cover
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Your Generated Covers Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Your Generated Covers</h5>
+                    <p class="text-muted">Browse and download your AI-generated cover art collection</p>
+                    
+                    <div class="covers-grid" id="covers-grid">
+                        <!-- Generated covers will appear here -->
+                        {% if recent_covers %}
+                            {% for cover in recent_covers %}
+                            <div class="cover-item">
+                                <div class="cover-image">
+                                    <img src="/static/images/generated/{{ cover.image_path }}" alt="{{ cover.album_title }} by {{ cover.artist_name }}" loading="lazy">
+                                    <div class="cover-overlay">
+                                        <button class="btn btn-sm btn-light" onclick="downloadImage('/static/images/generated/{{ cover.image_path }}', '{{ cover.artist_name }}_{{ cover.album_title }}')">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="cover-info">
+                                    <div class="cover-title">{{ cover.album_title }}</div>
+                                    <div class="cover-artist">{{ cover.artist_name }}</div>
+                                    <small class="text-muted">{{ cover.genre }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="empty-state text-center py-5">
+                            <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No covers generated yet. Create your first one above!</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Generating Cover Art...</h5>
+                <p class="text-muted">AI is creating your professional album cover</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedGenre = '';
+    const genreButtons = document.querySelectorAll('.genre-btn');
+    const generatePromptBtn = document.getElementById('generate-prompt-btn');
+    const generateCoverBtn = document.getElementById('generate-cover-btn');
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    
+    console.log('🔧 CRITICAL DEBUG: Elements found:', {
+        generateCoverBtn: !!generateCoverBtn,
+        generatePromptBtn: !!generatePromptBtn,
+        genreButtons: genreButtons.length,
+        loadingModal: !!loadingModal
+    });
+
+    // Genre selection
+    genreButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            genreButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedGenre = this.getAttribute('data-genre');
+        });
+    });
+
+    // Generate prompt
+    generatePromptBtn.addEventListener('click', async function() {
+        const artistName = document.getElementById('artist-name').value;
+        const albumTitle = document.getElementById('album-title').value;
+        
+        if (!selectedGenre) {
+            console.warn('Please select a genre first');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/generate-prompt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    genre: selectedGenre,
+                    artist_name: artistName,
+                    album_title: albumTitle
+                })
+            });
+
+            const data = await response.json();
+            if (data.prompt) {
+                document.getElementById('ai-prompt').value = data.prompt;
+            }
+        } catch (error) {
+            console.error('Failed to generate prompt');
+        }
+    });
+
+    // Generate cover art - CRITICAL FIX
+    generateCoverBtn.addEventListener('click', async function() {
+        console.log('🎯 BUTTON CLICKED - Starting generation process');
+        
+        const artistName = document.getElementById('artist-name').value;
+        const albumTitle = document.getElementById('album-title').value;
+        const explicitContent = document.getElementById('explicit-content').checked;
+        const aiPrompt = document.getElementById('ai-prompt').value;
+        const selectedModel = document.getElementById('ai-model').value;
+
+        if (!artistName || !albumTitle || !selectedGenre) {
+            console.warn('Please fill in all required fields and select a genre');
+            return;
+        }
+
+        loadingModal.show();
+
+        try {
+            console.log('🚀 Starting cover art generation request...');
+            
+            // Set a timeout to prevent infinite loading
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+            
+            const response = await fetch('/api/generate-cover-art', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    artist_name: artistName,
+                    album_title: albumTitle,
+                    genre: selectedGenre,
+                    explicit_content: explicitContent,
+                    ai_prompt: aiPrompt,
+                    ai_model: selectedModel
+                }),
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+
+            console.log('📡 Response received, status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('📦 Full Response data:', JSON.stringify(data, null, 2));
+            
+            loadingModal.hide();
+            console.log('🚪 Loading modal hidden');
+
+            if (data.success) {
+                console.log('✅ SUCCESS BLOCK REACHED - Starting image display...');
+                
+                // Update token count
+                updateTokenCount(data.tokens_remaining);
+                
+                // Show success message (removed showAlert call that may not exist)
+                console.log('Cover art generated successfully!');
+                
+                // Get preview elements
+                const previewArea = document.getElementById('preview-area');
+                const previewActions = document.getElementById('preview-actions');
+                
+                console.log('📍 Preview area element:', previewArea);
+                console.log('📍 Preview area current HTML:', previewArea.innerHTML);
+                
+                // Display the generated image in preview
+                previewArea.innerHTML = `<img src="${data.image_url}" alt="Generated Cover Art" style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px;" onload="console.log('Image loaded successfully')" onerror="console.error('Image failed to load')">`;
+                
+                // Show download button with proper function
+                previewActions.style.display = 'block';
+                
+                // Update download button functionality
+                const downloadBtn = previewActions.querySelector('button');
+                if (downloadBtn) {
+                    downloadBtn.onclick = () => downloadImage(data.image_url, `${artistName}_${albumTitle}_cover`);
+                }
+                
+                // Add to covers grid
+                addToCoverGrid(data.image_url, artistName, albumTitle, selectedGenre);
+                
+                console.log('✅ All display operations completed');
+                
+            } else {
+                console.log('❌ FAILURE BLOCK REACHED');
+                // Show specific error message from backend
+                const errorMessage = data.error || 'Artwork could not be generated. Check your prompt or try again.';
+                console.error('Error:', errorMessage);
+                console.error('❌ COVER ART GENERATION FAILED:', data.error);
+                
+                // Show error in preview area
+                const previewArea = document.getElementById('preview-area');
+                previewArea.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #ff6b6b; text-align: center; background: rgba(255,107,107,0.1); border: 2px dashed #ff6b6b; border-radius: 12px;">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <p style="font-weight: bold;">AI Generation Failed</p>
+                        <small>${errorMessage}</small>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('❌ COVER ART GENERATION ERROR:', error);
+            loadingModal.hide();
+            console.error(`Generation failed: ${error.message}`);
+            
+            // Show error in preview area
+            const previewArea = document.getElementById('preview-area');
+            previewArea.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #ff6b6b; text-align: center; background: rgba(255,107,107,0.1); border: 2px dashed #ff6b6b; border-radius: 12px;">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <p style="font-weight: bold;">Connection Error</p>
+                    <small>Failed to generate cover art</small>
+                </div>
+            `;
+        }
+    });
+
+    // Token count update function
+    function updateTokenCount(remaining) {
+        // Update token display if it exists
+        const tokenDisplay = document.querySelector('.token-count');
+        if (tokenDisplay) {
+            tokenDisplay.textContent = remaining;
+        }
+    }
+
+    // Download image function
+    function downloadImage(imageUrl, filename) {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = filename + '.jpg';
+        link.click();
+        console.log('Download triggered for:', filename);
+    }
+
+    // Add to covers grid function
+    function addToCoverGrid(imageUrl, artistName, albumTitle, genre) {
+        const coversGrid = document.getElementById('covers-grid');
+        const emptyState = coversGrid.querySelector('.empty-state');
+        
+        // Remove empty state if it exists
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        // Create cover item
+        const coverItem = document.createElement('div');
+        coverItem.className = 'cover-item';
+        coverItem.innerHTML = `
+            <div class="cover-image">
+                <img src="${imageUrl}" alt="${albumTitle} by ${artistName}" loading="lazy">
+                <div class="cover-overlay">
+                    <button class="btn btn-sm btn-light" onclick="downloadImage('${imageUrl}', '${artistName}_${albumTitle}')">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="cover-info">
+                <div class="cover-title">${albumTitle}</div>
+                <div class="cover-artist">${artistName}</div>
+                <small class="text-muted">${genre}</small>
+            </div>
+        `;
+        
+        // Insert at the beginning to show newest first
+        coversGrid.insertBefore(coverItem, coversGrid.firstChild);
+    }
+    
+    // Download image function
+    function downloadImage(imageUrl, filename) {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = `${filename}.jpg`;
+        link.click();
+    }
+
+    // Alert function
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at top of page
+        const container = document.querySelector('.container-fluid');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

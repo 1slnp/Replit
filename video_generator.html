@@ -1,0 +1,718 @@
+{% extends "base.html" %}
+
+{% block title %}AI Music Video Generator - SLNP Art{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="hero-section text-center mb-5">
+        <h1 class="hero-title">Create AI-Powered Music Videos</h1>
+        <p class="hero-description">
+            Generate visually stunning music videos using your audio and AI-powered scene generation. 
+            Upload your song, pick a visual style, and let the AI do the rest.
+        </p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <!-- Upload & Video Settings Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-film me-2"></i>
+                        Video Generation Settings
+                    </h5>
+                    
+                    <form id="video-form" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label class="form-label">Upload Audio</label>
+                            <div class="upload-area" id="video-upload-area">
+                                <div class="upload-content">
+                                    <i class="fas fa-upload fa-2x mb-3"></i>
+                                    <p>Drop your audio file here or click to browse</p>
+                                    <small class="text-muted">MP3, WAV supported</small>
+                                </div>
+                                <input type="file" id="video-audio-file" accept=".mp3,.wav" hidden>
+                            </div>
+                            <div id="video-file-info" class="mt-2" style="display: none;">
+                                <small class="text-muted">
+                                    <i class="fas fa-file-audio me-1"></i>
+                                    <span id="video-filename"></span> - <span id="video-filesize"></span>
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="video-track-title" class="form-label">Track Title</label>
+                            <input type="text" class="form-control" id="video-track-title" placeholder="Enter track title" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Select Visual Style</label>
+                            <div class="visual-style-grid">
+                                <button type="button" class="btn style-btn active" data-style="Cyberpunk">
+                                    <i class="fas fa-robot me-2"></i>
+                                    Cyberpunk
+                                </button>
+                                <button type="button" class="btn style-btn" data-style="Cinematic">
+                                    <i class="fas fa-camera me-2"></i>
+                                    Cinematic
+                                </button>
+                                <button type="button" class="btn style-btn" data-style="Abstract Motion">
+                                    <i class="fas fa-shapes me-2"></i>
+                                    Abstract Motion
+                                </button>
+                                <button type="button" class="btn style-btn" data-style="Anime">
+                                    <i class="fas fa-heart me-2"></i>
+                                    Anime
+                                </button>
+                                <button type="button" class="btn style-btn" data-style="Fantasy">
+                                    <i class="fas fa-magic me-2"></i>
+                                    Fantasy
+                                </button>
+                                <button type="button" class="btn style-btn" data-style="Street Art / Urban">
+                                    <i class="fas fa-spray-can me-2"></i>
+                                    Street Art / Urban
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="scene-prompt" class="form-label">Scene Prompt (Optional)</label>
+                            <div class="input-group mb-2">
+                                <textarea class="form-control" id="scene-prompt" rows="3" 
+                                        placeholder="Describe the visuals (e.g., a city skyline at night with neon lights and rain)"></textarea>
+                                <button class="btn btn-outline-secondary" type="button" id="generate-prompt-btn" 
+                                        title="Generate AI prompt suggestions">
+                                    <i class="fas fa-magic"></i>
+                                </button>
+                            </div>
+                            <div id="prompt-suggestions" class="mt-2" style="display: none;">
+                                <div class="alert alert-light">
+                                    <strong><i class="fas fa-lightbulb me-2"></i>AI Suggestions:</strong>
+                                    <div id="generated-prompt" class="mb-2"></div>
+                                    <div class="btn-group-vertical d-grid gap-1" id="suggestion-buttons"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="video-duration" class="form-label">Video Duration</label>
+                                <select class="form-select" id="video-duration">
+                                    <option value="15s">15 seconds</option>
+                                    <option value="30s" selected>30 seconds</option>
+                                    <option value="1min">1 minute</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="video-resolution" class="form-label">Resolution</label>
+                                <select class="form-select" id="video-resolution">
+                                    <option value="720p">720p</option>
+                                    <option value="1080p" selected>1080p</option>
+                                    <option value="4K">4K (Premium)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="token-cost-info mb-4">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>AI Video Generation:</strong> Creating real AI videos using OpenAI DALL-E frames. Each video costs 5 tokens and uses actual AI-generated content.
+                                <div class="mt-2">
+                                    <small class="text-muted">Available tokens: <span id="video-tokens-remaining">--</span></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary-gradient w-100" id="generate-video-btn" disabled>
+                            <i class="fas fa-play me-2"></i>
+                            Generate Video
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Video Preview Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-eye me-2"></i>
+                        Video Preview
+                    </h5>
+                    
+                    <div class="video-preview-container">
+                        <!-- Processing State -->
+                        <div class="processing-state text-center" id="processing-state" style="display: none;">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Generating...</span>
+                            </div>
+                            <h5>Generating AI Video...</h5>
+                            <p class="text-muted mb-3">Processing your request...</p>
+                            <div class="progress mb-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%" id="generation-progress"></div>
+                            </div>
+                            <small class="text-muted" id="processing-status">Initializing...</small>
+                        </div>
+                        
+                        <!-- Default Placeholder -->
+                        <div class="video-placeholder text-center" id="video-preview-area" style="display: block;">
+                            <i class="fas fa-video fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Upload audio to start video generation</p>
+                        </div>
+                        
+                        <!-- Video Player with Enhanced UI -->
+                        <div class="video-player-container" id="video-player-container" style="display: none;">
+                            <video id="generatedVideo" controls preload="metadata" 
+                                   style="width: 100%; height: 300px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                                <source src="" type="video/mp4">
+                                Your browser does not support HTML5 video.
+                            </video>
+                            
+                            <!-- Video Info Display -->
+                            <div class="video-info mt-2 text-center">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Duration</small>
+                                        <span id="video-duration-display">--:--</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Status</small>
+                                        <span class="badge bg-success" id="video-status-display">Ready</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Size</small>
+                                        <span id="video-size-display">-- KB</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Error Display -->
+                        <div id="videoError" class="alert alert-danger mt-3 text-center" style="display: none;">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <span id="videoErrorMessage">Video generation failed</span>
+                            <button class="btn btn-sm btn-outline-danger mt-2" onclick="retryVideoGeneration()">
+                                <i class="fas fa-redo me-1"></i>Retry
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="video-preview-actions mt-3" id="video-preview-actions" style="display: none;">
+                        <button class="btn btn-outline-light btn-sm w-100 mb-2" onclick="playVideoPreview()">
+                            <i class="fas fa-play me-1"></i>
+                            Play Preview
+                        </button>
+                        <button class="btn btn-outline-light btn-sm w-100" onclick="downloadCurrentVideo()">
+                            <i class="fas fa-download me-1"></i>
+                            Download Video
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Videos Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Video Jobs</h5>
+                    <p class="text-muted">Track your AI-generated music videos and download completed ones</p>
+                    
+                    <div class="video-jobs-list" id="video-jobs-list">
+                        {% if recent_videos %}
+                            {% for video in recent_videos %}
+                            <div class="job-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="job-title">{{ video.track_title }}</div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-palette me-1"></i>{{ video.visual_style }} • 
+                                            <i class="fas fa-clock me-1"></i>{{ video.duration }} • 
+                                            <i class="fas fa-tv me-1"></i>{{ video.resolution }}
+                                        </small>
+                                    </div>
+                                    <div class="job-actions">
+                                        {% if video.status == 'completed' %}
+                                            <span class="badge bg-success me-2">
+                                                <i class="fas fa-check-circle me-1"></i>completed
+                                            </span>
+                                            <a href="{{ url_for('download_video', job_id=video.id) }}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-download me-1"></i>Download
+                                            </a>
+                                        {% elif video.status == 'processing' %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-spinner fa-spin me-1"></i>processing
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-exclamation-circle me-1"></i>failed
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state text-center py-5">
+                                <i class="fas fa-video fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No videos generated yet. Create your first one above!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="videoLoadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Generating Music Video...</h5>
+                <p class="text-muted">AI is creating your visual masterpiece</p>
+                <div class="progress mt-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedStyle = 'cyberpunk';
+    let uploadedFile = null;
+    let currentJobId = null;
+    
+    const styleButtons = document.querySelectorAll('.style-btn');
+    const videoUploadArea = document.getElementById('video-upload-area');
+    const videoAudioFile = document.getElementById('video-audio-file');
+    const generateVideoBtn = document.getElementById('generate-video-btn');
+    const loadingModal = new bootstrap.Modal(document.getElementById('videoLoadingModal'));
+
+    // Update token count display
+    fetch('/api/tokens', {
+        credentials: 'same-origin'  // Include session cookies for authentication
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.tokens !== undefined) {
+                document.getElementById('video-tokens-remaining').textContent = data.tokens;
+                checkTokenAvailability(data.tokens);
+            }
+        });
+
+    function checkTokenAvailability(tokens) {
+        if (tokens < 5) {
+            generateVideoBtn.disabled = true;
+            generateVideoBtn.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Insufficient Tokens (Need 5)';
+            document.querySelector('.token-cost-info .alert').className = 'alert alert-warning';
+        }
+    }
+
+    // Visual style selection
+    styleButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            styleButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedStyle = this.getAttribute('data-style').toLowerCase();
+        });
+    });
+
+    // File upload handling
+    videoUploadArea.addEventListener('click', () => videoAudioFile.click());
+    videoUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        videoUploadArea.classList.add('drag-over');
+    });
+    videoUploadArea.addEventListener('dragleave', () => {
+        videoUploadArea.classList.remove('drag-over');
+    });
+    videoUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        videoUploadArea.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+
+    videoAudioFile.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    function handleFileSelect(file) {
+        uploadedFile = file;
+        document.getElementById('video-filename').textContent = file.name;
+        document.getElementById('video-filesize').textContent = formatFileSize(file.size);
+        document.getElementById('video-file-info').style.display = 'block';
+        
+        // Enable generate button if track title is filled and tokens are sufficient
+        const trackTitle = document.getElementById('video-track-title').value.trim();
+        const tokens = parseInt(document.getElementById('video-tokens-remaining').textContent);
+        if (trackTitle && tokens >= 5) {
+            generateVideoBtn.disabled = false;
+            generateVideoBtn.innerHTML = '<i class="fas fa-play me-2"></i>Generate Video';
+        }
+    }
+
+    // Track title validation
+    document.getElementById('video-track-title').addEventListener('input', function() {
+        const tokens = parseInt(document.getElementById('video-tokens-remaining').textContent);
+        if (this.value.trim() && uploadedFile && tokens >= 5) {
+            generateVideoBtn.disabled = false;
+            generateVideoBtn.innerHTML = '<i class="fas fa-play me-2"></i>Generate Video';
+        } else if (!uploadedFile) {
+            generateVideoBtn.disabled = true;
+            generateVideoBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Upload Audio First';
+        }
+    });
+
+    // Generate video
+    generateVideoBtn.addEventListener('click', async function() {
+        if (!uploadedFile) {
+            showAlert('Please upload an audio file first', 'warning');
+            return;
+        }
+
+        const trackTitle = document.getElementById('video-track-title').value.trim();
+        const scenePrompt = document.getElementById('scene-prompt').value.trim();
+        const duration = document.getElementById('video-duration').value;
+        const resolution = document.getElementById('video-resolution').value;
+
+        if (!trackTitle) {
+            showAlert('Please enter a track title', 'warning');
+            return;
+        }
+
+        loadingModal.show();
+
+        try {
+            // Upload audio file
+            const formData = new FormData();
+            formData.append('audio_file', uploadedFile);
+            formData.append('track_title', trackTitle);
+            formData.append('visual_style', selectedStyle);
+            formData.append('scene_prompt', scenePrompt);
+            formData.append('duration', duration);
+            formData.append('resolution', resolution);
+
+            const uploadResponse = await fetch('/api/upload-video-audio', {
+                method: 'POST',
+                body: formData
+            });
+
+            const uploadData = await uploadResponse.json();
+
+            if (uploadData.success) {
+                currentJobId = uploadData.job_id;
+                updateTokenCount(uploadData.tokens_remaining);
+                
+                // Start video generation
+                const generateResponse = await fetch('/api/start-video-generation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        job_id: currentJobId
+                    })
+                });
+
+                const generateData = await generateResponse.json();
+                loadingModal.hide();
+
+                if (generateData.success) {
+                    if (generateData.status === 'processing') {
+                        showAlert('Video generation started! Checking for completion...', 'info');
+                        
+                        // Start checking video status
+                        if (generateData.job_id) {
+                            startVideoStatusCheck(generateData.job_id);
+                        }
+                        refreshVideoList();
+                        return; // Exit early for processing status
+                    }
+                    
+                    showAlert('Video generated successfully!', 'success');
+                    
+                    // Get correct elements
+                    const videoPreviewArea = document.getElementById('video-preview-area');
+                    const videoPlayerContainer = document.getElementById('video-player-container');
+                    const videoPreviewActions = document.getElementById('video-preview-actions');
+                    const generatedVideo = document.getElementById('generatedVideo');
+                    
+                    if (generatedVideo && generateData.video_url) {
+                        console.log('Loading video from URL:', generateData.video_url);
+                        
+                        // Add error handling for video loading
+                        generatedVideo.onerror = function() {
+                            console.error('Video failed to load:', generateData.video_url);
+                            const videoError = document.getElementById('videoError');
+                            const videoErrorMessage = document.getElementById('videoErrorMessage');
+                            if (videoError && videoErrorMessage) {
+                                videoErrorMessage.textContent = 'Failed to load generated video';
+                                videoError.style.display = 'block';
+                            }
+                        };
+                        
+                        generatedVideo.onloadeddata = function() {
+                            console.log('Video loaded successfully - showing player');
+                            
+                            // Hide placeholder and show video player
+                            if (videoPreviewArea) videoPreviewArea.style.display = 'none';
+                            if (videoPlayerContainer) videoPlayerContainer.style.display = 'block';
+                            if (videoPreviewActions) videoPreviewActions.style.display = 'block';
+                            
+                            // Update video info
+                            const videoDurationDisplay = document.getElementById('video-duration-display');
+                            const videoSizeDisplay = document.getElementById('video-size-display');
+                            if (videoDurationDisplay) videoDurationDisplay.textContent = generateData.duration + 's';
+                            if (videoSizeDisplay) videoSizeDisplay.textContent = Math.round(generateData.file_size / 1024) + ' KB';
+                        };
+                        
+                        generatedVideo.oncanplay = function() {
+                            console.log('Video can play - forcing display');
+                            // Force show video player immediately when video can play
+                            if (videoPreviewArea) videoPreviewArea.style.display = 'none';
+                            if (videoPlayerContainer) videoPlayerContainer.style.display = 'block';
+                            if (videoPreviewActions) videoPreviewActions.style.display = 'block';
+                        };
+                        
+                        // Set the video source to trigger loading
+                        generatedVideo.src = generateData.video_url;
+                        const videoSource = generatedVideo.querySelector('source');
+                        if (videoSource) {
+                            videoSource.src = generateData.video_url;
+                        }
+                        generatedVideo.load(); // Force reload
+                        console.log('✅ VIDEO SRC SET:', generateData.video_url);
+                        
+                        // Force immediate display regardless of loading events (backup)
+                        setTimeout(() => {
+                            console.log('Timeout fallback - forcing video display');
+                            if (videoPreviewArea) videoPreviewArea.style.display = 'none';
+                            if (videoPlayerContainer) videoPlayerContainer.style.display = 'block';
+                            if (videoPreviewActions) videoPreviewActions.style.display = 'block';
+                            
+                            // Update video info even in fallback
+                            const videoDurationDisplay = document.getElementById('video-duration-display');
+                            const videoSizeDisplay = document.getElementById('video-size-display');
+                            if (videoDurationDisplay) videoDurationDisplay.textContent = generateData.duration + 's';
+                            if (videoSizeDisplay) videoSizeDisplay.textContent = Math.round(generateData.file_size / 1024) + ' KB';
+                        }, 500); // Reduced timeout for faster display
+                        
+                        // Update download functionality with correct job ID
+                        window.downloadCurrentVideo = function() {
+                            if (currentJobId) {
+                                window.open(`/download-video/${currentJobId}`, '_blank');
+                            } else {
+                                // Fallback to direct download
+                                const link = document.createElement('a');
+                                link.href = generateData.video_url;
+                                link.download = 'generated_video.mp4';
+                                link.click();
+                            }
+                        };
+                        
+                        window.playVideoPreview = function() {
+                            generatedVideo.play();
+                        };
+                        
+                        // Reset the form for next generation
+                        document.getElementById('video-track-title').value = '';
+                        document.getElementById('scene-prompt').value = '';
+                        document.getElementById('video-file-info').style.display = 'none';
+                        uploadedFile = null;
+                        generateVideoBtn.disabled = true;
+                        generateVideoBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Upload Audio First';
+                    }
+                    
+                } else {
+                    showAlert(generateData.error || 'Failed to generate video', 'error');
+                }
+            } else {
+                loadingModal.hide();
+                showAlert(uploadData.error || 'Failed to upload audio', 'error');
+            }
+        } catch (error) {
+            loadingModal.hide();
+            showAlert('Failed to generate video', 'error');
+        }
+    });
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Generate prompt handler
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'generate-prompt-btn' || e.target.closest('#generate-prompt-btn')) {
+            const trackTitle = document.getElementById('video-track-title').value.trim();
+            const visualStyle = selectedStyle ? selectedStyle.toLowerCase() : 'cinematic';
+            const userInput = document.getElementById('scene-prompt').value.trim();
+            
+            if (!trackTitle) {
+                showAlert('Please enter a track title first', 'warning');
+                return;
+            }
+            
+            const btn = document.getElementById('generate-prompt-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch('/api/generate-video-prompt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    track_title: trackTitle,
+                    visual_style: visualStyle,
+                    user_input: userInput
+                })
+            })
+            .then(response => response.json())
+            .then(response => {
+                if (response.success) {
+                    document.getElementById('generated-prompt').innerHTML = `<strong>Generated:</strong> ${response.generated_prompt}`;
+                    
+                    let suggestionsHtml = '';
+                    response.suggestions.forEach((suggestion, index) => {
+                        suggestionsHtml += `<button type="button" class="btn btn-sm btn-outline-primary suggestion-btn mb-1" data-prompt="${suggestion}">
+                            <i class="fas fa-plus me-1"></i>${suggestion.substring(0, 80)}${suggestion.length > 80 ? '...' : ''}
+                        </button>`;
+                    });
+                    document.getElementById('suggestion-buttons').innerHTML = suggestionsHtml;
+                    document.getElementById('prompt-suggestions').style.display = 'block';
+                    
+                    // Set the generated prompt
+                    document.getElementById('scene-prompt').value = response.generated_prompt;
+                } else {
+                    showAlert('Failed to generate prompt suggestions', 'error');
+                }
+            })
+            .catch(error => {
+                showAlert('Error generating prompt suggestions', 'error');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic"></i>';
+            });
+        }
+        
+        // Handle suggestion button clicks
+        if (e.target.classList.contains('suggestion-btn') || e.target.closest('.suggestion-btn')) {
+            const btn = e.target.closest('.suggestion-btn');
+            const prompt = btn.getAttribute('data-prompt');
+            document.getElementById('scene-prompt').value = prompt;
+            document.getElementById('prompt-suggestions').style.display = 'none';
+        }
+    });
+
+    function startVideoStatusCheck(jobId) {
+        let checkCount = 0;
+        const maxChecks = 40; // Check for up to 10 minutes (40 * 15 seconds)
+        
+        const checkStatus = () => {
+            if (checkCount >= maxChecks) {
+                showAlert('Video is taking longer than expected. Please check back later.', 'warning');
+                return;
+            }
+            
+            fetch(`/api/check-video-status/${jobId}`, {
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                checkCount++;
+                
+                if (data.status === 'completed' && data.video_url) {
+                    showAlert('Video completed! Loading preview...', 'success');
+                    
+                    // Display the completed video
+                    const videoPreviewArea = document.getElementById('video-preview-area');
+                    const videoPlayerContainer = document.getElementById('video-player-container');
+                    const videoPreviewActions = document.getElementById('video-preview-actions');
+                    const generatedVideo = document.getElementById('generatedVideo');
+                    
+                    if (generatedVideo && data.video_url) {
+                        generatedVideo.src = data.video_url;
+                        generatedVideo.load();
+                        
+                        // Show video player
+                        if (videoPreviewArea) videoPreviewArea.style.display = 'none';
+                        if (videoPlayerContainer) videoPlayerContainer.style.display = 'block';
+                        if (videoPreviewActions) videoPreviewActions.style.display = 'block';
+                        
+                        // Update download function
+                        window.downloadCurrentVideo = function() {
+                            const link = document.createElement('a');
+                            link.href = data.video_url;
+                            link.download = 'generated_video.mp4';
+                            link.click();
+                        };
+                    }
+                    
+                    refreshVideoList();
+                } else if (data.status === 'failed') {
+                    showAlert('Video generation failed. Please try again.', 'error');
+                } else if (data.status === 'processing') {
+                    // Continue checking
+                    setTimeout(checkStatus, 15000); // Check every 15 seconds
+                }
+            })
+            .catch(error => {
+                console.error('Error checking video status:', error);
+                setTimeout(checkStatus, 15000); // Retry on error
+            });
+        };
+        
+        // Start checking after 10 seconds
+        setTimeout(checkStatus, 10000);
+    }
+    
+    // Test function to show working video preview
+    window.testVideoPreview = function() {
+        const videoPreviewArea = document.getElementById('video-preview-area');
+        const videoPlayerContainer = document.getElementById('video-player-container');
+        const videoPreviewActions = document.getElementById('video-preview-actions');
+        const generatedVideo = document.getElementById('generatedVideo');
+        
+        // Use an existing demo video
+        const testVideoUrl = '/static/videos/generated/demo_video_9fe8ed04.mp4';
+        
+        if (generatedVideo) {
+            generatedVideo.src = testVideoUrl;
+            generatedVideo.load();
+            
+            // Show video player
+            if (videoPreviewArea) videoPreviewArea.style.display = 'none';
+            if (videoPlayerContainer) videoPlayerContainer.style.display = 'block';
+            if (videoPreviewActions) videoPreviewActions.style.display = 'block';
+            
+            showAlert('Test video loaded successfully!', 'success');
+        }
+    };
+});
+</script>
+{% endblock %}
