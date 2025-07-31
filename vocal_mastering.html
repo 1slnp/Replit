@@ -720,14 +720,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const formData = new FormData();
-        formData.append('audio_file', selectedFile);
+        formData.append('audio', selectedFile);
         formData.append('track_title', trackTitle);
         formData.append('template', selectedTemplate);
 
         processingModal.show();
 
         try {
-            const response = await fetch('/api/upload-audio', {
+            const response = await fetch('/api/upload-vocal', {
                 method: 'POST',
                 body: formData
             });
@@ -736,7 +736,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success) {
                 currentJobId = data.job_id;
-                updateTokenCount(data.tokens_remaining);
+                updateTokenCount(data.remaining_tokens);
                 
                 // Start mastering process
                 await startMasteringProcess();
@@ -750,17 +750,116 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Real-time EQ function
+    let realtimeDebounceTimer = null;
+    
+    function collectAllEQSettings() {
+        return {
+            bass: document.getElementById('bass-slider').value,
+            mids: document.getElementById('mids-slider').value,
+            treble: document.getElementById('treble-slider').value,
+            presence: document.getElementById('presence-slider')?.value || 0,
+            lowCut: document.getElementById('low-cut-slider')?.value || 0,
+            lowShelf: document.getElementById('low-shelf-slider')?.value || 0,
+            lowMid: document.getElementById('low-mid-slider')?.value || 0,
+            highMid: document.getElementById('high-mid-slider')?.value || 0,
+            highShelf: document.getElementById('high-shelf-slider')?.value || 0,
+            highCut: document.getElementById('high-cut-slider')?.value || 0,
+            threshold: document.getElementById('threshold-slider')?.value || 0,
+            ratio: document.getElementById('ratio-slider')?.value || 0,
+            attack: document.getElementById('attack-slider')?.value || 0,
+            release: document.getElementById('release-slider')?.value || 0,
+            lowBand: document.getElementById('low-band-slider')?.value || 0,
+            midBand: document.getElementById('mid-band-slider')?.value || 0,
+            highBand: document.getElementById('high-band-slider')?.value || 0,
+            stereoWidth: document.getElementById('stereo-width-slider')?.value || 100,
+            harmonics: document.getElementById('harmonics-slider')?.value || 0,
+            vintageWarmth: document.getElementById('vintage-warmth-checkbox')?.checked || false,
+            limiterThreshold: document.getElementById('limiter-threshold-slider')?.value || 0,
+            limiterRelease: document.getElementById('limiter-release-slider')?.value || 0,
+            outputGain: document.getElementById('output-gain-slider')?.value || 0
+        };
+    }
+    
+    async function applyRealtimeEQ() {
+        if (!currentJobId) return;
+        
+        const eqSettings = collectAllEQSettings();
+        
+        try {
+            const response = await fetch('/api/apply-realtime-eq', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    job_id: currentJobId,
+                    template: selectedTemplate,
+                    eq_settings: eqSettings
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update mastered audio source
+                if (masteredAudio) {
+                    masteredAudio.src = data.mastered_audio_url + '?v=' + Date.now(); // Add cache buster
+                    masteredAudio.load();
+                }
+                
+                // Update player source
+                const masteredPlayer = document.getElementById('masteredAudioPlayer');
+                if (masteredPlayer) {
+                    masteredPlayer.src = data.mastered_audio_url + '?v=' + Date.now();
+                    masteredPlayer.load();
+                }
+                
+                console.log('✅ Real-time EQ applied successfully');
+            } else {
+                console.error('Real-time EQ failed:', data.error);
+            }
+        } catch (error) {
+            console.error('Real-time EQ error:', error);
+        }
+    }
+    
+    function debounceRealtimeEQ() {
+        if (realtimeDebounceTimer) {
+            clearTimeout(realtimeDebounceTimer);
+        }
+        
+        realtimeDebounceTimer = setTimeout(() => {
+            if (currentJobId && masteredAudio) {
+                applyRealtimeEQ();
+            }
+        }, 500); // 500ms debounce
+    }
+    
+    // Add real-time EQ listeners to all sliders
+    function initializeRealtimeEQ() {
+        const sliders = document.querySelectorAll('.eq-slider, .compressor-slider, .multiband-slider, .stereo-slider, .limiter-slider');
+        sliders.forEach(slider => {
+            slider.addEventListener('input', debounceRealtimeEQ);
+        });
+        
+        // Also listen to template changes
+        const templateButtons = document.querySelectorAll('.template-btn');
+        templateButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setTimeout(debounceRealtimeEQ, 100); // Small delay to let template apply
+            });
+        });
+    }
+    
+    // Initialize real-time EQ on page load
+    initializeRealtimeEQ();
+
     async function startMasteringProcess() {
         if (!currentJobId) return;
 
         // Collect EQ settings
-        const eqSettings = {
-            bass: document.getElementById('bass-slider').value,
-            mids: document.getElementById('mids-slider').value,
-            treble: document.getElementById('treble-slider').value,
-            presence: document.getElementById('presence-slider').value,
-            // Add all other sliders...
-        };
+        const eqSettings = collectAllEQSettings();
 
         try {
             const response = await fetch('/api/start-mastering', {
