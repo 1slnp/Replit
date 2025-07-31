@@ -289,6 +289,72 @@ def upload_audio():
         app.logger.error(f"Error uploading audio: {str(e)}")
         return jsonify({'error': 'Failed to upload audio file'}), 500
 
+@app.route('/api/upload-vocal', methods=['POST'])
+def upload_vocal():
+    """Upload vocal track for mastering"""
+    try:
+        if 'audio' not in request.files:
+            return jsonify({'error': 'No audio file provided'}), 400
+        
+        file = request.files['audio']
+        track_title = request.form.get('track_title', '').strip()
+        template = request.form.get('template', 'Radio Ready')
+        
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if not track_title:
+            return jsonify({'error': 'Track title is required'}), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Please upload MP3, WAV, FLAC, M4A, or AAC files.'}), 400
+        
+        # Check token balance
+        if current_user.is_authenticated:
+            current_tokens = current_user.tokens
+        else:
+            current_tokens = session.get('tokens', 2)
+        
+        if current_tokens <= 0:
+            return jsonify({'error': 'Insufficient tokens. Please purchase more tokens.'}), 402
+        
+        # Save uploaded file
+        filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4().hex}_{filename}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        file.save(file_path)
+        
+        # Create vocal master record
+        vocal_master = VocalMaster()
+        vocal_master.track_title = track_title
+        vocal_master.original_file = unique_filename
+        vocal_master.template = template
+        vocal_master.status = 'uploaded'
+        
+        if current_user.is_authenticated:
+            vocal_master.user_id = current_user.id
+        
+        db.session.add(vocal_master)
+        db.session.commit()
+        
+        # Deduct token
+        if current_user.is_authenticated:
+            current_user.tokens -= 1
+            db.session.commit()
+        else:
+            session['tokens'] = current_tokens - 1
+        
+        return jsonify({
+            'success': True,
+            'job_id': vocal_master.id,
+            'message': 'Audio uploaded successfully',
+            'remaining_tokens': current_user.tokens if current_user.is_authenticated else session['tokens']
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Error uploading vocal: {str(e)}")
+        return jsonify({'error': 'Failed to upload audio file'}), 500
+
 @app.route('/api/start-mastering', methods=['POST'])
 def start_mastering():
     try:
@@ -354,6 +420,96 @@ def job_status(job_id):
         'original_url': f'/audio/{job_id}/original' if vocal_master.status == 'completed' else None,
         'mastered_url': f'/audio/{job_id}/mastered' if vocal_master.status == 'completed' else None
     })
+
+# Audio serving routes for real-time playback
+@app.route('/audio/<int:job_id>/original')
+def serve_original_audio(job_id):
+    """Serve original audio file for real-time comparison"""
+    try:
+        vocal_master = VocalMaster.query.get(job_id)
+        if not vocal_master:
+            return jsonify({'error': 'Job not found'}), 404
+        
+        original_path = os.path.join(app.config['UPLOAD_FOLDER'], vocal_master.original_file)
+        if not os.path.exists(original_path):
+            return jsonify({'error': 'Original audio file not found'}), 404
+        
+        return send_file(original_path, mimetype='audio/mpeg')
+    except Exception as e:
+        app.logger.error(f"Error serving original audio: {str(e)}")
+        return jsonify({'error': 'Failed to serve audio'}), 500
+
+@app.route('/audio/<int:job_id>/mastered')
+def serve_mastered_audio(job_id):
+    """Serve mastered audio file for real-time comparison"""
+    try:
+        vocal_master = VocalMaster.query.get(job_id)
+        if not vocal_master or vocal_master.status != 'completed':
+            return jsonify({'error': 'Mastered audio not ready'}), 404
+        
+        mastered_path = os.path.join(app.config['UPLOAD_FOLDER'], vocal_master.mastered_file)
+        if not os.path.exists(mastered_path):
+            return jsonify({'error': 'Mastered audio file not found'}), 404
+        
+        return send_file(mastered_path, mimetype='audio/mpeg')
+    except Exception as e:
+        app.logger.error(f"Error serving mastered audio: {str(e)}")
+        return jsonify({'error': 'Failed to serve audio'}), 500
+
+@app.route('/api/apply-realtime-eq', methods=['POST'])
+def apply_realtime_eq():
+    """Apply EQ changes in real-time without reprocessing the entire file"""
+    try:
+        data = request.get_json()
+        job_id = data.get('job_id')
+        template = data.get('template', 'Radio Ready')
+        eq_settings = data.get('eq_settings', {})
+        
+        if not job_id:
+            return jsonify({'error': 'Job ID is required'}), 400
+        
+        vocal_master = VocalMaster.query.get(job_id)
+        if not vocal_master:
+            return jsonify({'error': 'Job not found'}), 404
+        
+        # Update template and EQ settings
+        vocal_master.template = template
+        vocal_master.eq_settings = eq_settings
+        vocal_master.status = 'processing'
+        db.session.commit()
+        
+        # Apply fast mastering processing
+        from audio_processor import apply_vocal_mastering
+        
+        original_path = os.path.join(app.config['UPLOAD_FOLDER'], vocal_master.original_file)
+        mastered_filename = f"realtime_{vocal_master.original_file}"
+        mastered_path = os.path.join(app.config['UPLOAD_FOLDER'], mastered_filename)
+        
+        # Apply template-specific audio processing with real-time optimization
+        template_settings = {
+            'template': template,
+            'eq_settings': eq_settings
+        }
+        
+        success = apply_vocal_mastering(original_path, mastered_path, template_settings)
+        if not success:
+            return jsonify({'error': 'Real-time processing failed'}), 500
+        
+        # Update record
+        vocal_master.status = 'completed'
+        vocal_master.mastered_file = mastered_filename
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Real-time EQ applied successfully',
+            'mastered_audio_url': f'/audio/{vocal_master.id}/mastered',
+            'template': template
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Error applying real-time EQ: {str(e)}")
+        return jsonify({'error': 'Failed to apply real-time effects'}), 500
 
 @app.route('/api/enable-mastered/<int:job_id>')
 def enable_mastered_audio(job_id):
@@ -1034,7 +1190,7 @@ def login():
         
         if not email or not password:
             flash('Email and password are required.')
-            return render_template('auth/login.html')
+            return render_template('login.html')
         
         user = User.query.filter_by(email=email).first()
         
@@ -1045,7 +1201,7 @@ def login():
         else:
             flash('Invalid email or password.')
     
-    return render_template('auth/login.html')
+    return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -1058,28 +1214,28 @@ def register():
         # Validation
         if not all([username, email, password, confirm_password]):
             flash('All fields are required.')
-            return render_template('auth/register.html')
+            return render_template('register.html')
         
         if password != confirm_password:
             flash('Passwords do not match.')
-            return render_template('auth/register.html')
+            return render_template('register.html')
         
         if len(password) < 6:
             flash('Password must be at least 6 characters long.')
-            return render_template('auth/register.html')
+            return render_template('register.html')
         
         if len(username) < 3 or len(username) > 20:
             flash('Username must be between 3 and 20 characters.')
-            return render_template('auth/register.html')
+            return render_template('register.html')
         
         # Check if user already exists
         if User.query.filter_by(email=email).first():
             flash('Email address already registered.')
-            return render_template('auth/register.html')
+            return render_template('register.html')
         
         if User.query.filter_by(username=username).first():
             flash('Username already taken.')
-            return render_template('auth/register.html')
+            return render_template('register.html')
         
         # Create new user
         user = User()
@@ -1094,7 +1250,7 @@ def register():
         flash('Account created successfully! Welcome to SLNP Art!', 'success')
         return redirect(url_for('index'))
     
-    return render_template('auth/register.html')
+    return render_template('register.html')
 
 @app.route('/logout')
 @login_required

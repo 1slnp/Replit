@@ -6,7 +6,7 @@
     <title>Sign In - SLNP Art</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container-fluid">
@@ -15,8 +15,11 @@
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
                 <div class="auth-card">
                     <div class="text-center mb-4">
-                        <h1 class="brand-title mb-2">SLNP Art</h1>
-                        <p class="text-muted">Sign in to your account</p>
+                        <h1 class="brand-title mb-2">
+                            <i class="fas fa-music me-2 text-primary"></i>
+                            SLNP Art
+                        </h1>
+                        <p class="text-muted">Welcome back! Sign in to continue creating amazing music.</p>
                     </div>
 
                     {% with messages = get_flashed_messages() %}
@@ -32,13 +35,21 @@
 
                     <form method="POST" action="{{ url_for('login') }}" id="loginForm">
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control auth-input" id="email" name="email" required>
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>
+                                Email Address
+                            </label>
+                            <input type="email" class="form-control auth-input" id="email" name="email" 
+                                   placeholder="Enter your email" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control auth-input" id="password" name="password" required>
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-1"></i>
+                                Password
+                            </label>
+                            <input type="password" class="form-control auth-input" id="password" name="password" 
+                                   placeholder="Enter your password" required>
                         </div>
 
                         <div class="mb-3 form-check">
@@ -54,8 +65,15 @@
                     </form>
 
                     <div class="text-center mt-4">
-                        <p class="mb-0">Don't have an account? 
+                        <p class="mb-2">Don't have an account? 
                             <a href="{{ url_for('register') }}" class="auth-link">Sign up here</a>
+                        </p>
+                        <hr class="my-3">
+                        <p class="mb-0">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Join thousands of artists creating professional music with AI
+                            </small>
                         </p>
                     </div>
                 </div>
